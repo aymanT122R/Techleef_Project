@@ -5,16 +5,27 @@ if [ $# -ne 1 ];then
     exit 1
 fi 
 
+PROJECT_DIR="$(realpath "$(dirname "$0")/..")"
 
-VENV_DIR="yocto-venv"
+VENV_DIR="${PROJECT_DIR}yocto-venv"
 
 do_prepare_env() {
+    
+
     if [ -d "$VENV_DIR" ]; then
         #make sure that it is actually a python venv
         # else fail with error message
-        exit 1
+
+        if [ ! "$VENV_DIR/pyvenv.cfg" ]; then 
+            echo " [x] python Venv directory exist but no pyvenv.cfg"
+            echo " [x] Make sure to remove the directory and repeat again"
+            exit 1  
+        fi 
     else
-        python3 -m venv "$VENV_DIR" 
+        python3 -m venv "$VENV_DIR" || {
+            echo "[x] failed to setup the vevn"
+            exit 1 
+        }
     fi 
 
     #source the venv
@@ -25,9 +36,13 @@ do_prepare_env() {
 
     #install "kas"
 
-    if ! pip3 install kas; then
-        echo "[x] Failed to install kas"
-        exit 1
+
+    if ! pip3 list | grep kas; then 
+        echo "[+] Installing kas"
+        if ! pip3 install kas; then
+            echo "[x] Failed to install kas"
+            exit 1
+        fi
     fi
 
 
